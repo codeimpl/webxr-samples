@@ -1,0 +1,47 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<button disabled>Not Supported</button>
+<script>
+
+(async() => {
+
+let frameOfReference = null;
+let gl = null;
+let session = null;
+
+const xrButton = document.querySelector('button');
+const device = await navigator.xr.requestDevice();
+
+try {
+  await device.supportsSession({immersive: true});
+  xrButton.innerText = 'Enter VR';
+  xrButton.disabled = false;
+  xrButton.addEventListener('click', onEnterVR);
+} catch(err) {
+  // Not Supported
+}
+
+async function onEnterVR() {
+  session = await device.requestSession({immersive: true});
+  gl = document.createElement('canvas').getContext('webgl', {compatibleXRDevice: session.device});
+  session.baseLayer = new XRWebGLLayer(session, gl);
+  frameOfReference = await session.requestFrameOfReference('stage');
+  session.requestAnimationFrame(onXRFrame);
+}
+
+function onXRFrame(time, frame) {
+	session.requestAnimationFrame(onXRFrame);
+	const pose = frame.getDevicePose(frameOfReference);
+	if (pose) {
+		for(const view of frame.views) {
+			gl.bindFramebuffer(gl.FRAMEBUFFER, session.baseLayer.framebuffer);
+			const viewport = session.baseLayer.getViewport(view);
+			gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+			gl.clearColor(0.1, 0.5, 0.1, 1.0);
+			gl.clear(gl.COLOR_BUFFER_BIT);
+		}
+	}
+}
+
+})();
+
+</script>

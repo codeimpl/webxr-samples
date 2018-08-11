@@ -1,0 +1,80 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<button disabled>Not Supported XR</button>
+<script src="./js/three.js"></script>
+<script src="./js/utils.js"></script>
+<script>
+
+(async() => {
+
+let frameOfReference = null;
+let gl = null;
+let camera = null;
+let scene = null;
+let renderer = null;
+let session = null;
+
+const xrButton = document.querySelector('button');
+const device = await navigator.xr.requestDevice();
+
+try {
+  await device.supportsSession({immersive: true});
+  xrButton.innerText = 'Enter XR';
+  xrButton.disabled = false;
+  xrButton.addEventListener('click', onEnterVR);
+} catch(err) {
+  // Not Supported
+}
+
+function initRederingObj(session) {
+  renderer = new THREE.WebGLRenderer({
+    alpha: true,
+    preserveDrawingBuffer: true,
+  });
+  renderer.autoClear = false;
+  scene = DemoUtils.createCubeScene();
+  gl = renderer.getContext();
+  gl.setCompatibleXRDevice(session.device);
+  camera = new THREE.PerspectiveCamera();
+  camera.matrixAutoUpdate = false;
+}
+
+async function onEnterVR() {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('xrpresent');
+  document.body.appendChild(canvas);
+  session = await device.requestSession({outputContext: ctx});
+  initRederingObj(session);
+  //gl = document.createElement('canvas').getContext('webgl', {compatibleXRDevice: session.device});
+  session.baseLayer = new XRWebGLLayer(session, gl);
+  frameOfReference = await session.requestFrameOfReference('eye-level');
+  session.requestAnimationFrame(onXRFrame);
+}
+
+function draw(view, pose) {		
+  camera.projectionMatrix.fromArray(view.projectionMatrix);
+  const viewMatrix = new THREE.Matrix4().fromArray(pose.getViewMatrix(view));
+  camera.matrix.getInverse(viewMatrix);
+  camera.updateMatrixWorld(true);
+  renderer.clearDepth();
+  renderer.render(scene, camera);
+}
+
+function onXRFrame(time, frame) {
+	session.requestAnimationFrame(onXRFrame);
+	const pose = frame.getDevicePose(frameOfReference);
+	gl.bindFramebuffer(gl.FRAMEBUFFER, session.baseLayer.framebuffer);
+
+	if (pose) {
+		for(const view of frame.views) {
+			const viewport = session.baseLayer.getViewport(view);
+			gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+			gl.clearColor(0, 0, 0, 1.0);	
+  			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+			draw(view, pose);
+		}
+	}
+}
+
+})();
+
+</script>

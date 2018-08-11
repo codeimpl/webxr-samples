@@ -100,6 +100,18 @@
 
         <script>
           let pages = [
+            { title: 'Empty', category: 'Basics',
+              path: 'busanGDGEmpty.html',
+              description: 'Extremely simple use of WebXR with no library dependencies.' },
+
+            { title: 'With Three.js', category: 'Basics',
+              path: 'busanGDGThreejs.html',
+              description: 'Demonstrates how to present a simple WebGL scene to a XRDevice with Three.js.' },
+
+            { title: 'Magic Window', category: 'Basics',
+              path: 'busanGDGMagic.html',
+              description: 'Demonstrates use of a non-exclusive XRSession to present "Magic Window" content.' },
+
             { title: 'XR Presentation', category: 'Basics',
               path: 'xr-presentation.html',
               description: 'Demonstrates how to present a simple WebGL scene to a XRDevice.' },
@@ -211,7 +223,7 @@
             links.appendChild(polyfillLink);
 
             let sourceLink = document.createElement('a');
-            sourceLink.href = 'https://github.com/immersive-web/webxr-samples/blob/master/' + page.path;
+            sourceLink.href = 'https://github.com/codeimpl/webxr-samples/blob/gh-pages/' + page.path;
             sourceLink.innerHTML = 'Source';
             links.appendChild(sourceLink);
 
